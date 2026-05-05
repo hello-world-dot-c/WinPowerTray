@@ -32,7 +32,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore WinPowerTray/WinPowerTray.csproj
+        run: dotnet restore WinPowerTray/WinPowerTray.csproj --runtime win-x64
 
       - name: Publish (self-contained, win-x64)
         run: >

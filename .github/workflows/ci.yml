@@ -29,10 +29,10 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore WinPowerTray/WinPowerTray.csproj
+        run: dotnet restore WinPowerTray/WinPowerTray.csproj --runtime win-x64
 
       - name: Build (Release)
-        run: dotnet build WinPowerTray/WinPowerTray.csproj --configuration Release --no-restore
+        run: dotnet build WinPowerTray/WinPowerTray.csproj --configuration Release --runtime win-x64 --no-restore
 
       - name: Publish (self-contained, win-x64)
         run: >
