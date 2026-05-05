@@ -18,9 +18,11 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem   _itemEfficiency;
     private readonly ToolStripMenuItem   _itemBalanced;
     private readonly ToolStripMenuItem   _itemPerformance;
+    private readonly System.Windows.Forms.Timer _pollTimer;
 
     // Track the icon we last gave to NotifyIcon so we can dispose it.
-    private Icon? _currentIcon;
+    private Icon?      _currentIcon;
+    private PowerMode  _lastKnownMode;
 
     public TrayApplicationContext()
     {
@@ -61,8 +63,13 @@ public sealed class TrayApplicationContext : ApplicationContext
             Visible          = true
         };
 
-        // Initial state
+        // Initial state (also seeds _lastKnownMode)
         RefreshMenuState();
+
+        // --- Poll for external mode changes -------------------------------------
+        _pollTimer = new System.Windows.Forms.Timer { Interval = 5000 };
+        _pollTimer.Tick += OnPollTick;
+        _pollTimer.Start();
     }
 
     // -------------------------------------------------------------------------
@@ -95,13 +102,14 @@ public sealed class TrayApplicationContext : ApplicationContext
     private void RefreshMenuState()
     {
         PowerMode current = PowerModeManager.GetCurrentMode();
+        _lastKnownMode = current;
 
         _itemEfficiency .Checked = current == PowerMode.BestEfficiency;
         _itemBalanced   .Checked = current == PowerMode.Balanced;
         _itemPerformance.Checked = current == PowerMode.BestPerformance;
 
         // Swap the tray icon colour to match the new mode
-        Icon newIcon = IconHelper.Create(current);
+        Icon newIcon  = IconHelper.Create(current);
         Icon? oldIcon = _currentIcon;
 
         _trayIcon.Icon    = newIcon;
@@ -110,6 +118,20 @@ public sealed class TrayApplicationContext : ApplicationContext
 
         // Dispose previous icon *after* assigning the new one
         oldIcon?.Dispose();
+    }
+
+    private void OnPollTick(object? s, EventArgs e)
+    {
+        PowerMode current = PowerModeManager.GetCurrentMode();
+        if (current == _lastKnownMode) return;
+
+        // Mode was changed externally (Settings, powercfg, another app…)
+        RefreshMenuState();
+        _trayIcon.ShowBalloonTip(
+            timeout:  2000,
+            tipTitle: "WinPowerTray",
+            tipText:  $"Power mode changed to {PowerModeManager.Label(current)}",
+            tipIcon:  ToolTipIcon.Info);
     }
 
     // -------------------------------------------------------------------------
@@ -139,6 +161,8 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         if (disposing)
         {
+            _pollTimer.Stop();
+            _pollTimer.Dispose();
             _trayIcon.Visible = false;
             _trayIcon.Dispose();
             _menu.Dispose();

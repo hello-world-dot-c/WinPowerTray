@@ -14,6 +14,7 @@
     <FileVersion>1.0.0.0</FileVersion>
     <Description>Windows 11 system tray app to switch power modes</Description>
     <Copyright>Copyright (c) 2026 hello-world-dot-c</Copyright>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <!-- Produce a single self-contained exe for easy distribution -->
     <SelfContained>false</SelfContained>
     <!-- Suppress the console window entirely -->
