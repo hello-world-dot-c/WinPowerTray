@@ -1,0 +1,80 @@
+name: Version bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version component to bump'
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    name: Bump ${{ inputs.bump }} version
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Use a PAT so the pushed tag triggers release.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: next
+        shell: pwsh
+        run: |
+          # Read current version from csproj
+          [xml]$csproj = Get-Content WinPowerTray/WinPowerTray.csproj
+          $current = $csproj.Project.PropertyGroup[0].Version
+          if (-not $current) {
+            $current = $csproj.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ } | Select-Object -First 1
+          }
+          Write-Host "Current version: $current"
+
+          $parts = $current -split '\.'
+          $major = [int]$parts[0]
+          $minor = if ($parts.Count -gt 1) { [int]$parts[1] } else { 0 }
+          $patch = if ($parts.Count -gt 2) { [int]$parts[2] } else { 0 }
+
+          switch ('${{ inputs.bump }}') {
+            'major' { $major++; $minor = 0; $patch = 0 }
+            'minor' { $minor++;              $patch = 0 }
+            'patch' { $patch++ }
+          }
+
+          $next = "$major.$minor.$patch"
+          Write-Host "Next version: $next"
+          "current=$current" | Out-File -Append $env:GITHUB_OUTPUT
+          "next=$next"       | Out-File -Append $env:GITHUB_OUTPUT
+
+      - name: Update version in csproj
+        shell: pwsh
+        run: |
+          $file    = 'WinPowerTray/WinPowerTray.csproj'
+          $current = '${{ steps.next.outputs.current }}'
+          $next    = '${{ steps.next.outputs.next }}'
+          $content = Get-Content $file -Raw
+          $content = $content -replace "<Version>$([regex]::Escape($current))</Version>",      "<Version>$next</Version>"
+          $content = $content -replace "<AssemblyVersion>[^<]+</AssemblyVersion>", "<AssemblyVersion>$next.0</AssemblyVersion>"
+          $content = $content -replace "<FileVersion>[^<]+</FileVersion>",         "<FileVersion>$next.0</FileVersion>"
+          Set-Content $file $content -NoNewline
+
+      - name: Commit & tag
+        shell: bash
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add WinPowerTray/WinPowerTray.csproj
+          git commit -m "chore: bump version to v${{ steps.next.outputs.next }}"
+          git tag "v${{ steps.next.outputs.next }}"
+          git push origin HEAD:main --follow-tags

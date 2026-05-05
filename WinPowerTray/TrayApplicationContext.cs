@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -10,6 +11,8 @@ namespace WinPowerTray;
 /// </summary>
 public sealed class TrayApplicationContext : ApplicationContext
 {
+    private const string ProjectUrl = "https://github.com/hello-world-dot-c/WinPowerTray";
+
     private readonly NotifyIcon          _trayIcon;
     private readonly ContextMenuStrip    _menu;
     private readonly ToolStripMenuItem   _itemEfficiency;
@@ -31,8 +34,9 @@ public sealed class TrayApplicationContext : ApplicationContext
         _itemBalanced   .CheckOnClick = false;
         _itemPerformance.CheckOnClick = false;
 
-        var separator = new ToolStripSeparator();
-        var itemExit  = new ToolStripMenuItem("Exit", null, OnExitClick);
+        var separator        = new ToolStripSeparator();
+        var itemProjectPage  = new ToolStripMenuItem("Go to project page", null, OnProjectPageClick);
+        var itemExit         = new ToolStripMenuItem("Exit", null, OnExitClick);
 
         // ShowImageMargin must stay true (default) so checkmarks render in the left column.
         _menu = new ContextMenuStrip();
@@ -42,6 +46,7 @@ public sealed class TrayApplicationContext : ApplicationContext
             _itemBalanced,
             _itemPerformance,
             separator,
+            itemProjectPage,
             itemExit
         });
 
@@ -79,6 +84,12 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
 
         RefreshMenuState();
+
+        _trayIcon.ShowBalloonTip(
+            timeout:  2000,
+            tipTitle: "WinPowerTray",
+            tipText:  $"Switched to {PowerModeManager.Label(mode)}",
+            tipIcon:  ToolTipIcon.Info);
     }
 
     private void RefreshMenuState()
@@ -108,6 +119,11 @@ public sealed class TrayApplicationContext : ApplicationContext
     private void OnEfficiencyClick (object? s, EventArgs e) => ApplyMode(PowerMode.BestEfficiency);
     private void OnBalancedClick   (object? s, EventArgs e) => ApplyMode(PowerMode.Balanced);
     private void OnPerformanceClick(object? s, EventArgs e) => ApplyMode(PowerMode.BestPerformance);
+
+    private void OnProjectPageClick(object? s, EventArgs e)
+    {
+        Process.Start(new ProcessStartInfo { FileName = ProjectUrl, UseShellExecute = true });
+    }
 
     private void OnExitClick(object? s, EventArgs e)
     {
