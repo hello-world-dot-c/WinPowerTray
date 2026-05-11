@@ -8,13 +8,18 @@ Switch Windows 11 power modes from the system tray — no Settings app, no click
 
 ## Features
 
-- **Three power modes** accessible with a single right-click:
+- **Three power modes** accessible from the tray menu:
   - 🍃 Best power efficiency — maximise battery life
   - ⚖️ Balanced — the Windows default
   - ⚡ Best performance — maximum CPU/GPU throughput
+- **Left- and right-click both open the menu** — no need to remember which one
+- **Two label styles** to match what Windows Settings shows on your machine:
+  - *Best power efficiency / Balanced / Best performance* (most desktops)
+  - *Recommended / Better Performance / Best Performance* (some laptops, e.g. Intel Evo)
 - **Colour-coded tray icon** — green / blue / red at a glance
-- **Toast notification** on every mode switch
+- **Toast notification** on every mode change (can be disabled in Settings)
 - **Stays in sync** with external changes made via Settings or `powercfg`
+- **Settings persisted** in `%AppData%\WinPowerTray\settings.json`
 - **Single-instance guard** — safe to add to startup
 - **No elevation required** — uses the official Windows power overlay API
 
@@ -32,17 +37,23 @@ Switch Windows 11 power modes from the system tray — no Settings app, no click
 
 ## Usage
 
-Right-click the tray icon to open the menu:
+Click the tray icon (left or right) to open the menu:
 
 | Menu item | Action |
 |-----------|--------|
 | 🍃 Best power efficiency | Activates efficiency mode |
 | ⚖️ Balanced | Activates balanced mode (default) |
 | ⚡ Best performance | Activates performance mode |
+| Settings ▸ Label style | Choose which label set matches your Windows version |
+| Settings ▸ Show power mode change notification | Toggle the toast shown on every mode change |
 | Go to project page | Opens this page in your browser |
 | Exit | Quits WinPowerTray |
 
-A checkmark shows the currently active mode. A toast notification confirms every switch.
+A checkmark shows the currently active mode. By default a toast confirms every switch (including changes made from Windows Settings or `powercfg`).
+
+### Label style
+
+Windows Settings uses different names for the same three overlays depending on the machine. If the labels in WinPowerTray don't match what your Settings app shows — or if switching to the middle/leaf mode doesn't seem to work — open **Settings ▸ Label style** and pick the set that matches your system. The mapping (label *and* underlying overlay GUID) updates immediately and is persisted for next launch.
 
 ## Building from source
 
