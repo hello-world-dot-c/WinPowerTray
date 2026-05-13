@@ -6,6 +6,8 @@
 
 Switch Windows 11 power modes from the system tray — no Settings app, no clicks through menus, no admin rights needed.
 
+![WinPowerTray menu screenshot](docs/screenshot.png)
+
 ## Features
 
 - **Three power modes** accessible from the tray menu:
